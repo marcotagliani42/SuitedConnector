@@ -1,21 +1,5 @@
 from collections import Counter, defaultdict
 from itertools import combinations, permutations
-class Game:
-    def __init__(self, players, player_limit) -> None:
-        self.players = players
-        self.player_limit = player_limit
-
-    def remove_player(self, player):
-        for i in range(len(self.players)):
-            if player == self.players[i]:
-                self.players.remove(i)
-                return
-
-    def add_player(self,player):
-        if player not in self.players:
-            self.players.append(player)
-            return True
-        return False
 
 class Player:
     def __init__(self, name, stack, identification) -> None:
@@ -25,15 +9,7 @@ class Player:
 
     def __eq__(self, __value: object) -> bool:
         return __value.id == self.id
-
-class PotLimitPreflop(Game):
-    def __init__(self, players, limit) -> None:
-        super().__init__(players)
-        self.limit = limit
-
-class NoLimitHoldem(Game):
-    pass
-
+    
 class Card:
     def __init__(self, rank, suit) -> None:
         self.rank = rank
@@ -50,14 +26,7 @@ class Board:
         self.cards = cards
 
     def best_hand(self,card1,card2):
-
-        self.cards.append(card1)
-        self.cards.append(card2)
-        best_hand = max(list(map(lambda x: Hand(x), combinations(self.cards,5))))
-        self.cars.pop()
-        self.cars.pop()
-
-        return best_hand
+        return max(list(map(lambda x: Hand(x), combinations(self.cards+[card1,card2],5))))
     
 class Hand:
     ranks = {"highcard":0, "pair": 1, "twopair":2, "trips": 3,
@@ -130,7 +99,8 @@ class Hand:
         return Hand.ranks[self.hand] < Hand.ranks[__value]
     
     def __gt__(self, __value):
-        return not self < __value
+        return not (self < __value or self == __value)
+    
 class BettigRound:
     pass
 
