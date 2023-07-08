@@ -1,21 +1,25 @@
+from game_elements import Player, Pot, BettingRound, Card, Board, Hand
+import random
 class Game:
-    def __init__(self, players, player_limit) -> None:
+    def __init__(self, players) -> None:
         self.players = players
-        self.player_limit = player_limit
+
+        deck = self.deal_cards()
+        for player in self.players:
+            player.set_holecards((deck.pop(), deck.pop()))
+
+        self.board = Board(deck[:5])
     
-    def run():
-        pass
+    def run(self):
+        pot = Pot()
+        for _ in range(4):
+            round = BettingRound()
+    
+    def deal_cards():
+        deck = [Card(rank, suit) for rank in range(2,15) for suit in ["h", "s", "d", "c"]]
+        random.shuffle(deck)
+        return deck
 
-    def remove_player(self, removed):
-        self.players = [player for player in self.players if player != removed]
+print(Game.deal_cards())
 
-    def add_player(self,player):
-        self.players.append(player)
 
-class PotLimitPreflop(Game):
-    def __init__(self, players, limit) -> None:
-        super().__init__(players)
-        self.limit = limit
-
-class NoLimitHoldem(Game):
-    pass

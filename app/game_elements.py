@@ -1,14 +1,23 @@
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, deque
 from itertools import combinations, permutations
 
 class Player:
-    def __init__(self, name, stack, identification) -> None:
+    def __init__(self, name, stack) -> None:
         self.name = name
         self.stack = stack
-        self.id = identification
+        self.hole_cards = tuple()
 
-    def __eq__(self, __value: object) -> bool:
-        return __value.id == self.id
+    def set_holecards(self, cards):
+        self.hole_cards = cards
+    
+    def pay(self,amount):
+        self.stack += amount
+
+    #todo
+    def getAction(self, to_call):
+        ans = input("Enter action amount")
+        return ans.split()[0], int(ans.split()[1])
+
     
 class Card:
     def __init__(self, rank, suit) -> None:
@@ -20,13 +29,32 @@ class Card:
     
     def getSuit(self):
         return self.suit
+    
+    def __eq__(self, other: object) -> bool:
+        return self.rank == other.rank
+    def __lt__(self, other: object) -> bool:
+        return self.rank < other.rank
+    def __gt__(self, other: object) -> bool:
+        return self.rank > other.rank
+    def __repr__(self) -> str:
+        return f'{self.rank}{self.suit}'
 
 class Board:
     def __init__(self, cards) -> None:
         self.cards = cards
 
-    def best_hand(self,card1,card2):
-        return max(list(map(lambda x: Hand(x), combinations(self.cards+[card1,card2],5))))
+    def best_hand(self,holecards):
+        return max(list(map(lambda x: Hand(x), combinations(self.cards+list(holecards),5))))
+    
+    def get_winners(self, players):
+        hands = {player: self.best_hand(player.get_holecards()) for player in players}
+        best_hand = max(hands.values())
+        return [player for player in players if hands[player] == best_hand]
+    
+    def show_card(self):
+        for i in range(5):
+            print(self.cards[i])
+            yield
     
 class Hand:
     ranks = {"highcard":0, "pair": 1, "twopair":2, "trips": 3,
@@ -90,20 +118,63 @@ class Hand:
             return "twopair" if len(count_ranks[2] == 2) else "pair"
         return "highcard"
     
-    def __eq__(self, __value: object) -> bool:
-        return Hand.ranks[self.hand] == Hand.ranks[__value] and self.card_strength == __value.card_strength
+    def __eq__(self, other: object) -> bool:
+        return Hand.ranks[self.hand] == Hand.ranks[other] and self.card_strength == other.card_strength
 
-    def __lt__(self, __value):
-        if Hand.ranks[self.hand] == Hand.ranks[__value]:
-            return self.card_strength < __value.card_strength
-        return Hand.ranks[self.hand] < Hand.ranks[__value]
+    def __lt__(self, other):
+        if Hand.ranks[self.hand] == Hand.ranks[other]:
+            return self.card_strength < other.card_strength
+        return Hand.ranks[self.hand] < Hand.ranks[other]
     
-    def __gt__(self, __value):
-        return not (self < __value or self == __value)
+    def __gt__(self, other):
+        return not (self < other or self == other)
     
-class BettigRound:
-    pass
+class BettingRound:
+    def __init__(self, pots, player_tocall, potlimit = False) -> None:
+        self.potlimit = potlimit
+        self.player_tocall = player_tocall
+        self.pots = pots
+    
+    def start(self):
+        calls = set(self.player_tocall[-2][0])
 
+        while len(calls) < len(self.player_tocall):
+            
+            player, to_call = self.player_tocall.popleft()
+            action = player.getAction(to_call)
+
+            if action[0] == "call":
+                calls.add(player)
+                self.player_tocall.append((player,0))
+                
+            elif action[0] == "raise":
+                self.player_tocall = [(player, due+action[1]) for player,due in self.players_tocall] 
+                calls = set(player)
+                self.player_tocall.append((player,0))
+            
+            elif action[0] == "fold":
+                for pot in self.pots:
+                    pot.fold_player(player)
+            
+            elif action[0] == "allin" and action[1] <= to_call:
+                new_pot = Pot([player for player,due in self.player_tocall])
+                self.pots.append(new_pot)
+            else:
+                pass
+            
+    
 class Pot:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, players, amount = 0) -> None:
+        self.amount = amount
+        self.players = players
+
+    def payout(self, board):
+        winners = board.get_winners(self.players)
+        for winner in winners:
+            winner.pay(self.amount//len(winners))
+    
+    def fold_player(self,player):
+        self.players.remove(player)
+    
+    def getAmount(self):
+        return self.amount
