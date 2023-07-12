@@ -1,10 +1,11 @@
 from collections import Counter, defaultdict, deque
 from itertools import combinations, permutations
+from Hand import Hand
 
 class Player:
-    def __init__(self, name, stack) -> None:
+
+    def __init__(self, stack, name = None) -> None:
         self.name = name
-        self.stack = stack
         self.hole_cards = tuple()
 
     def set_holecards(self, cards):
@@ -12,17 +13,24 @@ class Player:
     
     def pay(self,amount):
         self.stack += amount
+    
+    def get_stack(self,stack):
+        return self.stack
 
-    #todo
+    #todo. take from stack
     def getAction(self, to_call):
         ans = input("Enter action amount")
+        self.stack -= ans
         return ans.split()[0], int(ans.split()[1])
 
     
 class Card:
-    def __init__(self, rank, suit) -> None:
-        self.rank = rank
-        self.suit = suit
+    values = {str(num):num for num in range(2,11)}
+    values.update({"J":11, "Q":12, "K":13, "A":14})
+
+    def __init__(self, card) -> None:
+        self.rank = Card.values[card[0]]
+        self.suit = card[1]
 
     def getRank(self):
         return self.rank
@@ -52,6 +60,4 @@ class Board:
         return [player for player in players if hands[player] == best_hand]
     
     def show_card(self):
-        for i in range(5):
-            print(self.cards[i])
-            yield
+        pass

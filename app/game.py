@@ -4,7 +4,7 @@ from collections import deque
 class Game:
     def __init__(self, players, blinds) -> None:
         self.players = players
-        self.bigb, self.smallb = blinds
+        self.blinds = blinds
         deck = self.deal_cards()
         for player in self.players:
             player.set_holecards((deck.pop(), deck.pop()))
@@ -13,17 +13,24 @@ class Game:
     
     def run(self):
         stage = 0
-        while players and stage < 4:
+        pot = Pot(self.players)
+
+        while len(players) > 1 and stage < 4:
             self.reveal_cards(stage)
             stage += 1
-            round = BettingRound(players)
-            players, pots = round.start()
+            round = BettingRound(players, pot, self.blinds)
+            self.blinds = (0,0)
+            players, pot = round.run()
+        
+        pot.payout(self.board)
+        
+        
     
     def deal_cards():
         deck = [Card(rank, suit) for rank in range(2,15) for suit in ["h", "s", "d", "c"]]
         random.shuffle(deck)
         return deck
     
-    def reveal_cards():
+    def reveal_cards(self):
         pass
 
