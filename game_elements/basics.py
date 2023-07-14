@@ -1,6 +1,7 @@
 from collections import Counter, defaultdict, deque
 from itertools import combinations, permutations
 from Hand import Hand
+from enum import Enum, unique
 
 class Player:
 
@@ -19,24 +20,38 @@ class Player:
 
     #todo. take from stack
     def getAction(self, to_call):
-        ans = input("Enter action amount")
-        self.stack -= ans
-        return ans.split()[0], int(ans.split()[1])
+        pass
+@unique
+class CardRank(Enum):
+    DEUCE = 1
+    THREE = 2
+    FOUR = 3
+    FIVE = 4
+    SIX = 5
+    SEVEN = 6
+    EIGHT = 7
+    NINE = 8
+    TEN = 9
+    JACK = 10
+    QUEEN = 11
+    KING = 12
+    ACE = 13
 
     
 class Card:
-    values = {str(num):num for num in range(2,11)}
-    values.update({"J":11, "Q":12, "K":13, "A":14})
 
     def __init__(self, card) -> None:
         self.rank = Card.values[card[0]]
         self.suit = card[1]
 
     def getRank(self):
-        return self.rank
+        return Card.reverse_values[self.rank]
     
     def getSuit(self):
         return self.suit
+    
+    def getNext(self):
+        pass
     
     def __eq__(self, other: object) -> bool:
         return self.rank == other.rank
